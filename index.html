@@ -91,8 +91,8 @@
               <dd>Python module (a single file)</dd>
               <dt><code>myapp/__init__.py</code></dt>
               <dd>Python package (a file in a directory)</dd>
-              <dt><code>myproject-1.5.0.tar.gz.tar.gz</code></dt>
-              <dt><code>myproject-1.5.0-py2.py3-none-any.whl</code></dt>
+              <dt><code>myproject-1.0.0-py2.py3-none-any.whl</code></dt>
+              <dt><code>myproject-1.0.0.tar.gz</code></dt>
               <dd>Python distributions</dd>
             </dl>
           <aside data-markdown class="notes">
@@ -619,6 +619,90 @@ myproject
         <section>
           <section>
             <h2>How to deploy on Heroku 🚢</h2>
+          </section>
+          <section>
+            <h3>Install heroku-slugify</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+$ npm install heroku-slugify --global
+              </code>
+            </pre>
+          </section>
+          <section>
+            <h3>Build your distribution</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+$ python setup.py sdist bdist_wheel
+$ ls -1 dist
+myproject-1.0.0-py2.py3-none-any.whl
+myproject-1.0.0.tar.gz
+              </code>
+            </pre>
+          </section>
+          <section>
+            <h3>Upload your distribution</h3>
+            <p>
+              <a href="https://packagecloud.io/">packagecloud.io</a><br>
+              <small>Hosted repos for Deb, RPM, Python and RubyGem Packages</small>
+            </p>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * If you have private projects or don't want to upload to PyPI you can use packagecloud.
+                  * They got a nice Ruby Gem you can use to upload your distribution.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>Create the files required for Heroku</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+myproject
+├── manage.py
+└── heroku
+    ├── Procfile # The application server to use
+    |       # web: gunicorn myproject.config.wsgi
+    ├── manage.py # A copy of myproject/manage.py
+    ├── requirements.in # Contains something like
+    |       # myproject[gunicorn,whitenoise]==1.0.0
+    ├── requirements.txt # Compiled by pip-tools
+    ├── runtime.txt # Python version to be used
+    └── static_root
+        └── .gitkeep
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * If you are using packagecloud or another private server you need to add an <code>--extra-index-url</code> option to <code>requirements.in</code>.
+                  * You need the <code>manage.py</code> file and the empty <code>static_root</code> directory, otherwise <code>collectstatic</code> won't work on Heroku.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>How to configure the Django settings?</h3>
+            <p><a href="http://12factor.net/">The Twelve-Factor App</a></p>
+            <p>django-configurations</p>
+            <p>envdir</p>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * Accoring to the The Twelve-Factor App methodology the configuration should be kept in the environment.
+                  * You can use django-configurations to load settings from the environment.
+                  * <code>envdir</code> is tool that helps you with that in your local development environment.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>Deploy</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+$ heroku-slugify --app YOUR_HEROKU_APP_ID_HERE --version 1.0.0
+              </code>
+            </pre>
           </section>
         </section>
         <section>
