@@ -1,0 +1,23 @@
+{
+  "name": "django-package-deployment-workshop",
+  "version": "1.0.0",
+  "description": "Python has a powerful, versatile and fast packaging toolchain consisting of setuptools, pip and wheel. Why not use this toolchain to package and deploy Django projects instead of pushing complete Git repositories to servers?",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keimlink/django-package-deployment-workshop.git"
+  },
+  "author": "Markus Zapke-Gründemann",
+  "license": "CC-BY-4.0",
+  "bugs": {
+    "url": "https://github.com/keimlink/django-package-deployment-workshop/issues"
+  },
+  "homepage": "https://github.com/keimlink/django-package-deployment-workshop#readme",
+  "dependencies": {
+    "font-awesome": "4.5.0",
+    "reveal.js": "3.2.0"
+  },
+  "private": true
+}

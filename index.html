@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Deploying Django Projects as Python Packages</title>
+    <meta name="description" content="Python has a powerful, versatile and fast packaging toolchain consisting of setuptools, pip and wheel. Why not use this toolchain to package and deploy Django projects instead of pushing complete Git repositories to servers?">
+    <meta name="author" content="Markus Zapke-Gründemann">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/black.css" id="theme">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/custom.css">
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="reveal">
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+          <h2>Deploying Django Projects<br>as Python Packages</h2>
+          <p>DjangoCon Europe 2016 🎷</p>
+          <p>Markus Zapke-Gründemann</p>
+        </section>
+        <section>
+          <h2>About me 👋</h2>
+          <ul>
+            <p class="fragment">Started creating websites at the of end the 90's</p>
+            <p class="fragment">Open Source Software Developer</p>
+            <p class="fragment">Board member of the <a hef="http://django-de.org/">German Django Association</a></p>
+            <p class="fragment">Active <a href="http://djangogirls.org/">Django Girls</a> supporter</p>
+            <p class="fragment">Lab Lead of the <a href"http://codefor.de/leipzig/">Open Knowledge Lab in Leipzig</a></p>
+            <p class="fragment">Owner of <a href="http://www.transcode.de/">transcode</a></p></p>
+          </ul>
+          <aside data-markdown class="notes">
+            <script type="text/template">
+              <small>
+                * I started creating websites because I'm fascinated by the new communication possibilities the internet provides.
+                * I used Perl, PHP and Python (in that order).
+                * Because I never had the opportunity to visit a university I learned everything I know from Open Source.
+                * This is one of the main reasons why I am participating in Open Source: To give something back and grow the community.
+                * The German Django Association was founded to organize the first DjangoCon Europe community edition in Berlin 2010.
+                * The Open Knowledge Lab is a part of Code for Germany, which is inspired by Code for America.
+                * transcode offers Python, Django and Ember.js software development as well as professional Django training.
+              </small>
+            </script>
+          </aside>
+        </section>
+        <section>
+          <h2>Schedule 🕝</h2>
+          <ol>
+            <li>Analysing the main parts of a Django project 🔍</li>
+            <li>Reasons to create a Django project distribution 💯</li>
+            <li>How to create a Django project distribution 📦</li>
+            <li>How to deploy on Heroku 🚢</li>
+            <li>Time for discussions 📢</li>
+          </ol>
+        </section>
+        <section>
+          <section>
+            <h2>Analysing the main parts<br>of a Django project</h2>
+          </section>
+          <section>
+            <h2>Definitions</h2>
+            <dl>
+              <dt><code>models.py</code></dt>
+              <dd>Python module (a single file)</dd>
+              <dt><code>myapp/__init__.py</code></dt>
+              <dd>Python package (a file in a directory)</dd>
+              <dt><code>myproject-1.5.0.tar.gz.tar.gz</code></dt>
+              <dt><code>myproject-1.5.0-py2.py3-none-any.whl</code></dt>
+              <dd>Python distributions</dd>
+            </dl>
+          <aside data-markdown class="notes">
+            <script type="text/template">
+              <small>
+                * Before you can start I have to define a few terms.
+                * Of course a Python module can be part of a Python package.
+                * And Python modules and packages are part of a Python distribution.
+                * Even if the title of the workshop says "Deploying Django Projects as Python Packages" you are actually deploying a Python distribution.
+              </small>
+            </script>
+          </aside>
+          </section>
+          <section>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+myproject # project directory
+├── .git
+├── manage.py # sets DJANGO_SETTINGS_MODULE to myproject.settings
+|             # runs django.core.management.execute_from_command_line
+├── myapp
+│   ├── __init__.py # myapp is a Python package
+│   ├── admin.py
+│   ├── apps.py
+│   ├── migrations
+│   │   └── __init__.py # myapp.migrations are a Python package, too
+│   ├── models.py
+│   ├── tests.py
+│   └── views.py
+└── myproject
+    ├── __init__.py # myproject is a Python package, too
+    ├── settings.py # has myapp.apps.MyappConfig in INSTALLED_APPS
+    ├── urls.py
+    └── wsgi.py # sets DJANGO_SETTINGS_MODULE to myproject.settings
+                # runs django.core.wsgi.get_wsgi_application
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * This is the default structure you get after you executed the <code>startproject</code> and <code>startapp</code> commands.
+                  * Because you need to keep the code in a repository <code>git init</code> has also been executed.
+                  * You will recognize that you already have two Python packages at the top level.
+                  * Furthermore you can see that <code>manage.py</code>, <code>settings.py</code> and <code>wsgi.py</code> refer to apps and settings as Python paths.
+                  * These are all important observations that will help you to build a Python distribution for your Django project.
+                </small>
+              </script>
+            </aside>
+          </section>
+        </section>
+        <section>
+          <section>
+            <h2>Reasons to create<br>a Django project distribution</h2>
+            <p class="fragment"><code>pip</code> and <code>setuptools</code> have evolved quite a lot</p>
+            <p class="fragment"><code>wheels</code> makes installations faster and easier</p>
+            <p class="fragment">Distribution is easy</p>
+            <p class="fragment"><code>MANIFEST.in</code> controls which files are distributed</p>
+            <p class="fragment">Dependencies can be defined in <code>setup.py</code></p>
+            <p class="fragment">It's also possible to define optional dependencies</p>
+            <p class="fragment">Assets or GNU gettext <code>.mo</code> files can be compiled locally</p>
+            <p class="fragment"><code>tox</code> can be used to test if your distribution installs correctly</p>
+          </section>
+        </section>
+        <section>
+          <section>
+            <h2>How to create<br>a Django project distribution</h2>
+            <h4>And pitfalls to avoid <sub>🕳</sub>🚶</h4>
+          </section>
+          <section>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+myproject
+├── .git
+├── manage.py # 2. Change myproject.settings to config.settings
+├── myapp
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   └── views.py
+└── myproject # 1. Rename to config
+    ├── __init__.py
+    ├── settings.py
+    ├── urls.py
+    └── wsgi.py # 3. Change myproject.settings to config.settings
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * So let's start with transforming your Django project into a Python distribution.
+                  * The first thing you have to do is to rename the <code>myproject</code> Python package to <code>config</code>.
+                  * After that change <code>myproject.settings</code> to <code>config.settings</code> in <code>manage.py</code> and <code>wsgi.py</code>.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+myproject
+├── .git
+├── manage.py
+├── myapp
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   └── views.py
+└── config
+    ├── __init__.py
+    ├── settings.py
+    ├── urls.py
+    └── wsgi.py
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                </small>
+              </script>
+            </aside>
+          </section>
+        </section>
+        <section>
+          <section>
+            <h2>How to deploy on Heroku</h2>
+          </section>
+        </section>
+        <section>
+          <h2>Time for discussions</h2>
+        </section>
+        <section>
+          <h2>Resources 📌</h2>
+          <p>
+            <a href="https://github.com/keimlink/django-package-deployment-workshop">
+              <i class="fa fa-github"></i>keimlink/django-package-deployment-workshop
+            </a>
+          </p>
+          <p>
+            <a href="https://github.com/transcode-de/cookiecutter-django-project">
+              <i class="fa fa-github"></i>transcode-de/cookiecutter-django-project
+            </a>
+          </p>
+          <p>
+            <a href="https://twitter.com/keimlink"><i class="fa fa-twitter"></i>@keimlink</a>
+          </p>
+          <p class="creativecommons">
+            <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">
+              <img alt="Creative Commons License" src="img/cc-by-88x31.png" />
+            </a><br>
+            <span>This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
+          </p>
+        </section>
+      </div>
+    </div>
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+    <script>
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/zoom-js/zoom.js', async: true },
+          { src: 'plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+  </body>
+</html>
