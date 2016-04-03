@@ -112,7 +112,7 @@
 myproject # project directory
 ├── .git
 ├── manage.py # sets DJANGO_SETTINGS_MODULE to myproject.settings
-|             # runs django.core.management.execute_from_command_line
+|             # runs django.core.management.execute_from_command_line()
 ├── myapp
 │   ├── __init__.py # myapp is a Python package
 │   ├── admin.py
@@ -204,7 +204,7 @@ myproject
             </aside>
           </section>
           <section>
-            <h3>Create a <code>setup.py</code></h3>
+            <h3>Create a <code>setup.py</code> file</h3>
             <pre>
               <code data-trim data-noescape class="python tall">
 from setuptools import find_packages, setup
@@ -317,6 +317,300 @@ myproject
                   * This package will be collected by the <code>find_packages()</code> function in <code>setup.py</code>.
                   * Make sure you replace all imports pointing at your apps files.
                   * Also exchange the Python paths in <code>manage.py</code>, <code>settings.py</code>, <code>urls.py</code> and <code>wsgi.py</code> with the new paths.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>Define the dependencies<br>in <code>setup.py</code></h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+requires = [
+    'Django==1.8.8',
+    'django-braces==1.8.1',
+    'django-crispy-forms==1.5.2',
+    'psycopg2==2.6.1',
+    'pytz==2015.7',
+]
+setup(
+    name='myproject',
+    version='1.0.0',
+    description='Lorem ipsum dolor sit amet.',
+    long_description='Consectetur adipisicing elit, sed do tempor.',
+    author='Ada Lovelace',
+    author_email='ada@example.com',
+    include_package_data=True,
+    install_requires=requires, # Replaced [] with requires variable
+    ...
+)
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * Replace the list for the <code>install_requires</code> argument with the new <code>requires</code> variable.
+                  * You can pin every dependency to a specific version, like in <code>requirements.txt</code>.
+                  * You can also add the dependencies of your dependencies, if you really want to. But I'll later show a different solution for this.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>Define the optional dependencies<br>in <code>setup.py</code></h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+extras_require = {
+    'django_storages': [
+        'boto==2.39.0',
+        'django-storages-redux==1.3.2',
+    ],
+    'gunicorn': [
+        'gunicorn==19.4.5',
+    ],
+    'whitenoise': [
+        'whitenoise==2.0.6',
+    ],
+}
+setup(
+    name='myproject',
+    version='1.0.0',
+    ...
+    include_package_data=True,
+    install_requires=requires,
+    extras_require=extras_require, # This line is new
+    ...
+)
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * You can define optional dependencies in a way similar to how you defined your dependencies before.
+                  * But optional dependencies can be defined in groups.
+                  * Be aware that you can't use a hyphen in the key, that is why <code>django_storages</code> is used.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>How to install optional dependencies?</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+                $ pip install myproject[gunicorn,whitenoise]==1.0.0
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * I think this way is superior to having to deal with multiple requirements files for deployment.
+                  * But we still use requirements files to install development and testing packages.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>Create directories for<br>media, static files and templates</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+myproject
+├── .git
+├── manage.py
+├── myproject
+│   ├── __init__.py
+│   ├── apps
+│   ├── config
+│   ├── media # Use this path for your MEDIA_ROOT setting
+│   │   └── .gitkeep
+│   ├── static  # Add this path to your STATICFILES_DIRS setting
+│   │   └── .gitkeep
+│   ├── static_root # Use this path for your STATIC_ROOT setting
+│   │   └── .gitkeep
+│   └── templates # Add this path to your DIRS setting in TEMPLATES
+│       ├── 404.html
+│       └── base.html
+└── setup.py
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * So of course you want directories for media, static files and template.
+                  * Create them like inside the <code>myproject</code> directory so that they can become a part of the distribution.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>What about <code>manage.py</code>?</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+entry_points = {
+    'console_scripts': [
+        'site-admin = configurations.management:execute_from_command_line',
+    ]
+}
+setup(
+    name='myproject',
+    version='1.0.0',
+    ...
+    include_package_data=True,
+    install_requires=requires,
+    extras_require=extras_require,
+    entry_points=entry_points, # This line is new
+    ...
+)
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * As explained at the beginning <code>manage.py</code> just sets <code>DJANGO_SETTINGS_MODULE</code> and runs <code>django.core.management.execute_from_command_line()</code>.
+                  * This means we do not really need it, it's just there for convenience.
+                  * So you can either simply call <code>django-admin</code> or use <code>entry_points</code> instead. This is important if you use a different <code>execute_from_command_line()</code> function, like the one from django-configurations.
+                  * So you simply call <code>site-admin</code> instead of <code>django-admin</code> in this case.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>Create a <code>MANIFEST.in</code> file</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+include *.rst # For files like CONTRIBUTING.rst or README.rst
+include LICENSE
+include manage.py
+include MANIFEST.in
+include package.json
+include tox.ini
+recursive-include requirements *.pip
+graft heroku # Contains files for a Heroku deployment
+graft myproject
+prune myproject/media # Don't include any media files
+include myproject/media/.gitkeep # But just add the empty directory
+prune myproject/static_root
+graft tests
+exclude .editorconfig
+global-exclude *.py[co]
+global-exclude __pycache__
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * You need the <code>MANIFEST.in</code> file to configure which files are included in the distribution.
+                  * Create it in the same directory as <code>setup.py</code>.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>Configure the wheel to be universal<br>in <code>setup.cfg</code></h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+[wheel]
+universal = 1
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * Create the file in the same directory as <code>setup.py</code>.
+                  * If you do not configure the wheel to be universal you will have to create different ones for each Python version.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>Current project structure</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+myproject
+├── .git
+├── manage.py
+├── myproject
+│   ├── __init__.py
+│   ├── apps
+│   ├── config
+│   ├── media
+│   ├── static
+│   ├── static_root
+│   └── templates
+├── MANIFEST.in
+├── setup.cfg
+└── setup.py
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * This is how your main project structure should look like now.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>How to set up tests?</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+myproject
+├── .git
+├── manage.py
+├── myproject
+│   ├── __init__.py
+│   ├── apps
+│   ├── config
+│   ├── media
+│   ├── static
+│   ├── static_root
+│   └── templates
+├── tests
+│   ├── __init__.py
+│   └── myapp
+│       ├── __init__.py
+│       └── test_models.py # from myproject.apps.myapp import models
+├── MANIFEST.in
+├── setup.cfg
+└── setup.py
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * Create a new directory for your tests called <code>tests</code> in the repository root and put a <code>__init__.py</code> in it.
+                  * Then put the tests into subdirectories grouping them by app or topic.
+                  * This is the same way Django itself organizes it test suite.
+                  * Make sure you always import code from your project with the full Python path. Both Python packages are completely separate!
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>Where to put additional code?</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+myproject
+├── .git
+├── manage.py
+├── myproject
+│   ├── __init__.py
+│   ├── context_processors.py
+|   |    # Usage: from myproject.context_processors import func
+│   ├── apps
+│   ├── config
+│   ├── media
+│   ├── static
+│   ├── static_root
+│   └── templates
+├── tests
+├── MANIFEST.in
+├── setup.cfg
+└── setup.py
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * Because you have now a project structure that is completely namespaced it should be easier to figure our where to put additional code.
                 </small>
               </script>
             </aside>
