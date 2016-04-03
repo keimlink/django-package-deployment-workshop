@@ -171,6 +171,7 @@ myproject # project directory
             <h4>And pitfalls to avoid <sub>🕳</sub>🚶</h4>
           </section>
           <section>
+            <h3>Rename the inner <code>myproject</code> directory</h3>
             <pre>
               <code data-trim data-noescape class="tall bash">
 myproject
@@ -203,10 +204,59 @@ myproject
             </aside>
           </section>
           <section>
+            <h3>Create a <code>setup.py</code></h3>
+            <pre>
+              <code data-trim data-noescape class="python tall">
+from setuptools import find_packages, setup
+setup(
+    name='myproject',
+    version='1.0.0',
+    description='Lorem ipsum dolor sit amet.',
+    long_description='Consectetur adipisicing elit, sed do tempor.',
+    author='Ada Lovelace',
+    author_email='ada@example.com',
+    include_package_data=True,
+    install_requires=[],
+    license='Other/Proprietary License',
+    packages=find_packages(exclude=['tests*']),
+    zip_safe=False,
+    classifiers=[
+        'Framework :: Django',
+        'Intended Audience :: Developers',
+        'License :: Other/Proprietary License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+    ],
+)
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * Create a file named <code>setup.py</code> in your repository root.
+                  * In this file you have to call the <code>setup()</code> function from the <code>setuptools</code> package.
+                  * <code>include_package_data=True</code> tells setuptools to automatically include any data files that are specified by your <code>MANIFEST.in</code> file.
+                  * You can leave <code>install_requires</code> empty for now.
+                  * Set <code>license</code> to whatever license fits your needs - but if you use an Open Source license stick to ones that are OSI approved.
+                  * <code>find_packages()</code> will search for all packages to include in the distribution and exclude any tests.
+                  * A full list of trove classifiers is available on PyPI.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>Current project structure</h3>
             <pre>
               <code data-trim data-noescape class="tall bash">
 myproject
 ├── .git
+├── config # Was renamed from myproject to config
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
 ├── manage.py
 ├── myapp
 │   ├── __init__.py
@@ -217,16 +267,56 @@ myproject
 │   ├── models.py
 │   ├── tests.py
 │   └── views.py
-└── config
-    ├── __init__.py
-    ├── settings.py
-    ├── urls.py
-    └── wsgi.py
+└── setup.py # Was added in the previous step
               </code>
             </pre>
             <aside data-markdown class="notes">
               <script type="text/template">
                 <small>
+                  * This is the project structure you have after adding <code>setup.py</code>.
+                  * But all code for a Python distribution must be in a single directory.
+                  * At the moment you have two Python packages in your repository root.
+                  * So let's reorganize the project structure.
+                </small>
+              </script>
+            </aside>
+          </section>
+          <section>
+            <h3>New project structure</h3>
+            <pre>
+              <code data-trim data-noescape class="tall bash">
+myproject
+├── .git
+├── manage.py           # 1. Modify DJANGO_SETTINGS_MODULE
+|                       #    Example: myproject.config.settings
+├── myproject           # 2. Create a new directory
+│   ├── __init__.py     # 3. Create a new empty file
+│   ├── apps            # 4. Create a new directory
+│   │   ├── __init__.py # 5. Create a new empty file
+│   │   ├── myapp       # 6. Move myapp into myproject/apps
+│   │   │   ├── __init__.py
+│   │   │   ├── apps.py
+│   │   │   └── ...
+│   │   └── myotherapp  # Just another example app ;)
+│   │       ├── __init__.py
+│   │       └── ...
+│   └── config          # 7. Move config into myproject
+│       ├── __init__.py
+│       ├── settings.py # 8. Modify INSTALLED_APPS - example:
+│       │               #      myproject.apps.myapp.apps.MyappConfig
+│       │               #    Modify ROOT_URLCONF, WSGI_APPLICATION
+│       ├── urls.py     # 9. Modify include() calls
+│       └── wsgi.py     # 10. Modify DJANGO_SETTINGS_MODULE
+└── setup.py
+              </code>
+            </pre>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * This is the new project structure that organizes all code in a single Python package.
+                  * This package will be collected by the <code>find_packages()</code> function in <code>setup.py</code>.
+                  * Make sure you replace all imports pointing at your apps files.
+                  * Also exchange the Python paths in <code>manage.py</code>, <code>settings.py</code>, <code>urls.py</code> and <code>wsgi.py</code> with the new paths.
                 </small>
               </script>
             </aside>
