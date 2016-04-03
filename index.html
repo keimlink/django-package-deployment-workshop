@@ -148,12 +148,21 @@ myproject # project directory
             <h2>Reasons to create<br>a Django project distribution</h2>
             <p class="fragment"><code>pip</code> and <code>setuptools</code> have evolved quite a lot</p>
             <p class="fragment"><code>wheels</code> makes installations faster and easier</p>
-            <p class="fragment">Distribution is easy</p>
             <p class="fragment"><code>MANIFEST.in</code> controls which files are distributed</p>
+            <p class="fragment">Assets or GNU gettext <code>.mo</code> files can be compiled locally</p>
+            <p class="fragment">Distribution is easy</p>
             <p class="fragment">Dependencies can be defined in <code>setup.py</code></p>
             <p class="fragment">It's also possible to define optional dependencies</p>
-            <p class="fragment">Assets or GNU gettext <code>.mo</code> files can be compiled locally</p>
             <p class="fragment"><code>tox</code> can be used to test if your distribution installs correctly</p>
+            <aside data-markdown class="notes">
+              <script type="text/template">
+                <small>
+                  * Distribution and installation
+                    * Because <code>pip</code> automatically builds and caches wheels installations are very fast.
+                    * Even if you do not install the Python distribution using <code>pip</code> you can still use it to ship code as an archive.
+                </small>
+              </script>
+            </aside>
           </section>
         </section>
         <section>
