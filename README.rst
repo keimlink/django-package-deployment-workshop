@@ -10,8 +10,10 @@ In this workshop you will learn how to structure your Django project, so that
 it can be packaged as a Python package. You will learn about the advantages for
 development and deployment, as well as the pitfalls you have to be aware of.
 
-This workshop was held at `DjangoCon Europe 2016 <https://2016.djangocon.eu/>`_
-in Budapest.
+This workshop was held at
+
+* `DjangoCon Europe 2016 <https://2016.djangocon.eu/>`_ in Budapest
+* `Leipzig Python User Group <http://www.python-academy.de/User-Group/>`_ in April 2016
 
 Requirements
 ============
